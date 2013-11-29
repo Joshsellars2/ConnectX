@@ -6,6 +6,7 @@ class Board
    constructor: (rowCount, colCount) ->
       @rowCount = rowCount
       @colCount = colCount
+      @playerColor = [0, 0x00FF00, 0xFF0000]
       @cells = for row in [0...rowCount]
          for col in [0...colCount]
             new Cell(row, col)
@@ -13,6 +14,7 @@ class Board
 
 board = new Board(6,7)
 board.cells[0][3].player = 1
+board.cells[1][3].player = 2
 
 # create an new instance of a pixi stage
 stage = new PIXI.Stage 0xFFFFFF, true 
@@ -103,6 +105,7 @@ animate = ->
                centerX = (colXLeft + colXRight) / 2
                centerY = (rowYTop + rowYBottom) / 2
                thing.lineStyle 2, 0x000000, 1 
+               thing.beginFill board.playerColor[cell.player], 0.5 
                thing.drawCircle centerX, centerY, width / 3
 
    drawGrid()
