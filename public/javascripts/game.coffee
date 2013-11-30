@@ -4,6 +4,7 @@ class Cell
 
 class Board
    constructor: (rowCount, colCount) ->
+      @nextPlayer = 1
       @rowCount = rowCount
       @colCount = colCount
       @playerColor = [0, 0x00FF00, 0xFF0000]
@@ -16,8 +17,12 @@ board = new Board(6,7)
 board.cells[0][3].player = 1
 board.cells[1][3].player = 2
 
+width = 40
+height = 40
+rate = 5
+
 # create an new instance of a pixi stage
-stage = new PIXI.Stage 0xFFFFFF, true 
+stage = new PIXI.Stage 0xc0c0c0, true 
 
 stage.setInteractive true 
 
@@ -47,19 +52,43 @@ thing.position.y = 0
 
 count = 0
 
-stage.click = stage.tap = ->
-   graphics.lineStyle Math.random() * 30, Math.random() * 0xFFFFFF, 1 
-   graphics.moveTo Math.random() * 620,Math.random() * 380 
-   graphics.lineTo Math.random() * 620,Math.random() * 380 
+stage.click = stage.tap = (e)->
+   if board.checkerMotion then return
+   relPoint = e.getLocalPosition(graphics)
+   col = getColumn relPoint.x
+   row = getNextAvailableRow col
+   if row < 0 then return
+   board.checkerMotion = {col: col, y: 0, row: row, rate:1}
+
+getColumn = (x) ->
+   if x < 0
+      -1
+   else
+      col = x / width
+      if col < board.colCount
+         Math.floor col
+      else
+         -1
+
+getNextAvailableRow = (col) ->
+   if col >= 0
+      for r in [0...board.rowCount]
+         if board.cells[r][col].player
+            continue
+         return r
+   return -1
+
+getOtherPlayer = (player) ->
+   if player == 1
+      2
+   else
+      1
 
 animate = ->
    
    thing.clear()
    thing.lineStyle 3, 0xff0000, 1 
    thing.beginFill 0xffFF00, 0.5 
-
-   width = 40
-   height = 40
 
    getRowTop = (row) ->
       height * board.rowCount - height * (row - 1)
@@ -72,6 +101,18 @@ animate = ->
 
    getColRight = (col) ->
       width * (col + 1)
+
+   updateCheckerMotion = ->
+      cm = board.checkerMotion
+      if cm
+         finalY = (getRowBottom(cm.row) + getRowTop(cm.row)) / 2
+         if cm.y >= finalY
+            board.cells[cm.row][cm.col].player = board.nextPlayer
+            board.nextPlayer = getOtherPlayer board.nextPlayer
+            board.checkerMotion = null
+         else
+            cm.y += cm.rate
+            cm.rate++
 
    drawGrid = ->
       for row in [0...board.rowCount]
@@ -93,6 +134,10 @@ animate = ->
          thing.moveTo colXRight, getRowTop(0)
          thing.lineTo colXRight, getRowBottom(board.rowCount - 1)
 
+   drawCheckerMotion = ->
+      if board.checkerMotion
+         drawChecker board.nextPlayer, getColLeft(board.checkerMotion.col) + width /2, board.checkerMotion.y
+
    drawCheckers = ->
       for row in [0...board.rowCount]
          for col in [0...board.colCount]
@@ -104,12 +149,30 @@ animate = ->
                colXRight = getColRight(col)
                centerX = (colXLeft + colXRight) / 2
                centerY = (rowYTop + rowYBottom) / 2
+               drawChecker cell.player, centerX, centerY
+
+   drawCheckerMotion = ->
+      if board.checkerMotion
+         drawChecker board.nextPlayer, getColLeft(board.checkerMotion.col) + width /2, board.checkerMotion.y
+
+   drawChecker = (playerNumber, centerX, centerY) ->
                thing.lineStyle 2, 0x000000, 1 
-               thing.beginFill board.playerColor[cell.player], 0.5 
+               thing.beginFill board.playerColor[playerNumber], 1.0 
                thing.drawCircle centerX, centerY, width / 3
 
+   drawNextPlayer = ->
+      centerX = 50
+      centerY = getRowBottom(0) + 80
+      thing.lineStyle 2, 0x000000, 1
+
+      thing.beginFill board.playerColor[board.nextPlayer], 0.5 
+      thing.drawCircle centerX, centerY, width / 3
+
+   updateCheckerMotion()
    drawGrid()
    drawCheckers()
+   drawNextPlayer()
+   drawCheckerMotion()
 
    thing.moveTo -120 + Math.sin count  * 20, -100 + Math.cos count * 20 
    
