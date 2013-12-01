@@ -72,10 +72,10 @@ graphics = new PIXI.Graphics()
 stage.addChild graphics 
 
 # lets create moving shape
-thing = new PIXI.Graphics()
-stage.addChild thing 
-thing.position.x = 0
-thing.position.y = 0
+field = new PIXI.Graphics()
+stage.addChild field 
+field.position.x = 0
+field.position.y = 0
 
 count = 0
 
@@ -114,9 +114,9 @@ getOtherPlayer = (player) ->
 
 animate = ->
    
-   thing.clear()
-   thing.lineStyle 3, 0xff0000, 1 
-   thing.beginFill 0xffFF00, 0.5 
+   field.clear()
+   field.lineStyle 3, 0xff0000, 1 
+   field.beginFill 0xffFF00, 0.5 
 
    getRowTop = (row) ->
       height * board.rowCount - height * (row - 1)
@@ -133,7 +133,6 @@ animate = ->
    updateCheckerMotion = ->
       cm = board.checkerMotion
       if cm
-         console.log cm
          finalY = (getRowBottom(cm.row) + getRowTop(cm.row)) / 2
          if cm.y >= finalY
             board.cells[cm.row][cm.col].player = board.nextPlayer
@@ -155,21 +154,21 @@ animate = ->
       for row in [0...board.rowCount]
          rowYTop = getRowTop(row)
          rowYBottom = getRowBottom(row)
-         thing.lineStyle 3, 0xff0000, 1 
-         thing.moveTo getColLeft(0), rowYTop
-         thing.lineTo getColRight(board.colCount - 1), rowYTop
-         thing.lineStyle 2, 0x0000ff, 1 
-         thing.moveTo getColLeft(0), rowYBottom
-         thing.lineTo getColRight(board.colCount - 1), rowYBottom
+         field.lineStyle 3, 0xff0000, 1 
+         field.moveTo getColLeft(0), rowYTop
+         field.lineTo getColRight(board.colCount - 1), rowYTop
+         field.lineStyle 2, 0x0000ff, 1 
+         field.moveTo getColLeft(0), rowYBottom
+         field.lineTo getColRight(board.colCount - 1), rowYBottom
       for col in [0...board.colCount]
          colXLeft = getColLeft col
          colXRight = getColRight col
-         thing.lineStyle 2, 0x00FFff, 1 
-         thing.moveTo colXLeft, getRowTop(0)
-         thing.lineTo colXLeft, getRowBottom(board.rowCount - 1)
-         thing.lineStyle 1, 0x00FF00, 1 
-         thing.moveTo colXRight, getRowTop(0)
-         thing.lineTo colXRight, getRowBottom(board.rowCount - 1)
+         field.lineStyle 2, 0x00FFff, 1 
+         field.moveTo colXLeft, getRowTop(0)
+         field.lineTo colXLeft, getRowBottom(board.rowCount - 1)
+         field.lineStyle 1, 0x00FF00, 1 
+         field.moveTo colXRight, getRowTop(0)
+         field.lineTo colXRight, getRowBottom(board.rowCount - 1)
 
    drawCheckerMotion = ->
       if board.checkerMotion
@@ -179,13 +178,19 @@ animate = ->
       for row in [0...board.rowCount]
          for col in [0...board.colCount]
             cell = board.cells[row][col]
+            rowYTop = getRowTop(row)
+            rowYBottom = getRowBottom(row)
+            colXLeft = getColLeft(col)
+            colXRight = getColRight(col)
+            centerX = (colXLeft + colXRight) / 2
+            centerY = (rowYTop + rowYBottom) / 2
+            field.lineStyle 0, 0x0000FF, 1 
+            field.beginFill 0x0000FF, 1.0 
+            field.drawRect colXLeft, rowYTop, colXRight - colXLeft, rowYBottom - rowYTop
+            field.lineStyle 0, 0x000080, 1 
+            field.beginFill 0xBBBBBB, 1.0 
+            field.drawCircle centerX, centerY, width / 3
             if cell.player > 0
-               rowYTop = getRowTop(row)
-               rowYBottom = getRowBottom(row)
-               colXLeft = getColLeft(col)
-               colXRight = getColRight(col)
-               centerX = (colXLeft + colXRight) / 2
-               centerY = (rowYTop + rowYBottom) / 2
                drawChecker cell.player, centerX, centerY
 
    drawCheckerMotion = ->
@@ -193,20 +198,20 @@ animate = ->
          drawChecker board.nextPlayer, getColLeft(board.checkerMotion.col) + width /2, board.checkerMotion.y
 
    drawChecker = (playerNumber, centerX, centerY) ->
-               thing.lineStyle 2, 0x000000, 1 
-               thing.beginFill board.playerColor[playerNumber], 1.0 
-               thing.drawCircle centerX, centerY, width / 3
+      field.lineStyle 2, 0x000000, 1 
+      field.beginFill board.playerColor[playerNumber], 1.0 
+      field.drawCircle centerX, centerY, width / 3
 
    drawNextPlayerOrWinner = ->
       centerX = 50
       centerY = getRowBottom(0) + 100
-      thing.lineStyle 2, 0x000000, 1
+      field.lineStyle 2, 0x000000, 1
 
       playerToDraw = if board.gameOver then board.winningPlayerNumber else board.nextPlayer
       checkerWidth = if board.gameOver then width else width / 3
 
-      thing.beginFill board.playerColor[playerToDraw], 0.5 
-      thing.drawCircle centerX, centerY, checkerWidth
+      field.beginFill board.playerColor[playerToDraw], 0.5 
+      field.drawCircle centerX, centerY, checkerWidth
 
    updateCheckerMotion()
    updateWinner()
@@ -215,9 +220,9 @@ animate = ->
    drawNextPlayerOrWinner()
    drawCheckerMotion()
 
-   thing.moveTo -120 + Math.sin count  * 20, -100 + Math.cos count * 20 
+   field.moveTo -120 + Math.sin count  * 20, -100 + Math.cos count * 20 
    
-   thing.rotation = count * 0.1
+   field.rotation = count * 0.1
    renderer.render stage 
    requestAnimFrame  animate  
 
