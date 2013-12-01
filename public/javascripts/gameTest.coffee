@@ -16,13 +16,15 @@ class Board
         if col >= @colCount or row >= @rowCount then return false
         @cells[row][col].player == player
     isAtCellAndTheCellToTheRight: (player, row, col) =>
-        @isPlayerInCell(player, row, col) and @isPlayerInCell(player, row + 0, col + 1)
+        @isAtCellAndRelativeCell(player, row, col, 0, 1)
     isAtCellAndTheCellAbove: (player, row, col) =>
-        @isPlayerInCell(player, row, col) and @isPlayerInCell(player, row + 1, col + 0)
+        @isAtCellAndRelativeCell(player, row, col, 1, 0)
     isAtCellAndTheCellAboveRight: (player, row, col) =>
-        @isPlayerInCell(player, row, col) and @isPlayerInCell(player, row + 1, col + 1)
+        @isAtCellAndRelativeCell(player, row, col, 1, 1)
     isAtCellAndTheCellBelowRight: (player, row, col) =>
-        @isPlayerInCell(player, row, col) and @isPlayerInCell(player, row + 1, col - 1)
+        @isAtCellAndRelativeCell(player, row, col, 1, -1)
+    isAtCellAndRelativeCell: (player, row, col, offsetRow, offsetCol) =>
+        @isPlayerInCell(player, row, col) and @isPlayerInCell(player, row + offsetRow, col + offsetCol)
 
     isPlayerWinner: (player) ->
         for row in [0...@rowCount]
