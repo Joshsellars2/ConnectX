@@ -5,17 +5,44 @@ class Cell
 class Board
    constructor: (rowCount, colCount) ->
       @nextPlayer = 1
+      @gameOver = false
+      @winningPlayerNumber = 0
       @rowCount = rowCount
       @colCount = colCount
       @playerColor = [0, 0x00FF00, 0xFF0000]
+      @numberThatMustMatch = 4
       @cells = for row in [0...rowCount]
          for col in [0...colCount]
             new Cell(row, col)
+
+    isPlayerInCell: (player, row, col) =>
+        if col >= @colCount then return false
+        if row >= @rowCount then return false
+        if col < 0 then return false
+        if row < 0 then return false
+        @cells[row][col].player == player
+    isWinHorizontallyAtCell: (player, row, col) =>
+        @isAtCellAndRelativeCell(player, row, col, 0, 1)
+    isAtCellAndTheCellAbove: (player, row, col) =>
+        @isAtCellAndRelativeCell(player, row, col, 1, 0)
+    isAtCellAndTheCellAboveRight: (player, row, col) =>
+        @isAtCellAndRelativeCell(player, row, col, 1, 1)
+    isWinDiagonallyDown: (player, row, col) =>
+        @isAtCellAndRelativeCell(player, row, col, 1, -1)
+    isAtCellAndRelativeCell: (player, row, col, offsetRow, offsetCol) =>
+        for factor in [0...@numberThatMustMatch]
+            unless @isPlayerInCell(player, row + offsetRow * factor, col + offsetCol * factor)
+                return false
+        true
+    isPlayerWinner: (player) ->
+        for row in [0...@rowCount]
+            for col in [0...@colCount]
+                if @isWinHorizontallyAtCell(player, row, col) or @isAtCellAndTheCellAbove(player, row, col) or @isAtCellAndTheCellAboveRight(player, row, col) or @isWinDiagonallyDown(player, row, col)
+                    return true
+        false
       
 
 board = new Board(6,7)
-board.cells[0][3].player = 1
-board.cells[1][3].player = 2
 
 width = 40
 height = 40
@@ -54,6 +81,7 @@ count = 0
 
 stage.click = stage.tap = (e)->
    if board.checkerMotion then return
+   if board.gameOver then return
    relPoint = e.getLocalPosition(graphics)
    col = getColumn relPoint.x
    row = getNextAvailableRow col
@@ -105,6 +133,7 @@ animate = ->
    updateCheckerMotion = ->
       cm = board.checkerMotion
       if cm
+         console.log cm
          finalY = (getRowBottom(cm.row) + getRowTop(cm.row)) / 2
          if cm.y >= finalY
             board.cells[cm.row][cm.col].player = board.nextPlayer
@@ -113,6 +142,14 @@ animate = ->
          else
             cm.y += cm.rate
             cm.rate++
+
+   updateWinner = ->
+      if board.isPlayerWinner 1
+         board.gameOver = true
+         board.winningPlayerNumber = 1
+      else if board.isPlayerWinner 2
+         board.gameOver = true
+         board.winningPlayerNumber = 2
 
    drawGrid = ->
       for row in [0...board.rowCount]
@@ -160,18 +197,22 @@ animate = ->
                thing.beginFill board.playerColor[playerNumber], 1.0 
                thing.drawCircle centerX, centerY, width / 3
 
-   drawNextPlayer = ->
+   drawNextPlayerOrWinner = ->
       centerX = 50
-      centerY = getRowBottom(0) + 80
+      centerY = getRowBottom(0) + 100
       thing.lineStyle 2, 0x000000, 1
 
-      thing.beginFill board.playerColor[board.nextPlayer], 0.5 
-      thing.drawCircle centerX, centerY, width / 3
+      playerToDraw = if board.gameOver then board.winningPlayerNumber else board.nextPlayer
+      checkerWidth = if board.gameOver then width else width / 3
+
+      thing.beginFill board.playerColor[playerToDraw], 0.5 
+      thing.drawCircle centerX, centerY, checkerWidth
 
    updateCheckerMotion()
+   updateWinner()
    drawGrid()
    drawCheckers()
-   drawNextPlayer()
+   drawNextPlayerOrWinner()
    drawCheckerMotion()
 
    thing.moveTo -120 + Math.sin count  * 20, -100 + Math.cos count * 20 

@@ -13,6 +13,8 @@
 * Show the next player to move
 * Drop a checker when you click
 
-## To-do
+### Saturday evening
 * Detect a winner
+
+## To-do
 * Make it look cool
